@@ -1,0 +1,254 @@
+{% extends "layout.html" %}
+{% block title %}Ticket {{ numero_pedido }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="{{ url_for('dashboard') }}">Inicio</a><span>›</span>
+    <a href="{{ url_for('consulta_pedido') }}">Pedidos</a><span>›</span>
+    <span>Ticket {{ numero_pedido }}</span>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>Ticket de consumo</h1>
+      <p>Resumen del pedido {{ numero_pedido }}</p>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <a href="{{ url_for('consulta_pedido') }}" class="btn-secondary">← Volver</a>
+      {% if ticket_txt %}
+      <a href="{{ url_for('descargar_ticket', numero_pedido=numero_pedido) }}"
+         class="btn-primary" style="text-decoration:none;">
+        ⬇ Descargar TXT
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% set h = pedido.header %}
+
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
+
+  <!-- ── Ticket visual ──────────────────────────────────────── -->
+  <div class="ticket-visual">
+
+    <!-- Encabezado -->
+    <div class="ticket-head">
+      <div class="ticket-logo">🍔</div>
+      <h2>HAPPY BURGER</h2>
+      <p>Ticket de consumo</p>
+    </div>
+
+    <div class="ticket-divider">- - - - - - - - - - - - - - - - - - - - -</div>
+
+    <!-- Datos del pedido -->
+    <div class="ticket-meta">
+      <div class="ticket-meta-row">
+        <span>Número de pedido</span>
+        <strong>{{ h['numero_pedido'] }}</strong>
+      </div>
+      <div class="ticket-meta-row">
+        <span>Fecha</span>
+        <strong>{{ h['fecha'] }}</strong>
+      </div>
+      <div class="ticket-meta-row">
+        <span>Cliente</span>
+        <strong>{{ h['cliente'] }}</strong>
+      </div>
+      <div class="ticket-meta-row">
+        <span>Estado</span>
+        <span class="status-badge status-{{ h['estado'] }}">{{ h['estado']|capitalize }}</span>
+      </div>
+    </div>
+
+    <div class="ticket-divider">= = = = = = = = = = = = = = = = = = = = =</div>
+
+    <!-- Líneas de productos -->
+    <div class="ticket-items">
+      <div class="ticket-items-header">
+        <span style="flex:1;">Producto</span>
+        <span style="width:40px;text-align:center;">Cant</span>
+        <span style="width:70px;text-align:right;">Precio</span>
+        <span style="width:75px;text-align:right;">Total</span>
+      </div>
+      <div class="ticket-divider" style="margin:6px 0;">- - - - - - - - - - - - - - - - - - - - -</div>
+      {% for d in pedido.detalles %}
+      <div class="ticket-item-row">
+        <span class="ticket-item-name">{{ d['producto'] }}</span>
+        <span style="width:40px;text-align:center;color:#5A7A8A;">{{ d['cantidad'] }}</span>
+        <span style="width:70px;text-align:right;color:#5A7A8A;">${{ "%.2f"|format(d['precio']) }}</span>
+        <span style="width:75px;text-align:right;font-weight:600;">${{ "%.2f"|format(d['subtotal']) }}</span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="ticket-divider">= = = = = = = = = = = = = = = = = = = = =</div>
+
+    <!-- Total -->
+    <div class="ticket-total">
+      <span>TOTAL</span>
+      <span class="ticket-total-amount">${{ "%.2f"|format(h['subtotal']) }}</span>
+    </div>
+
+    <div class="ticket-divider" style="margin-top:16px;">- - - - - - - - - - - - - - - - - - - - -</div>
+
+    <div class="ticket-footer">
+      <p>¡Gracias por tu preferencia!</p>
+      <p style="font-size:.75rem;color:#93B0BE;margin-top:4px;">Happy Burger &mdash; Sistema Administrativo</p>
+    </div>
+
+    <!-- Botones de acción bajo el ticket -->
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:24px;flex-wrap:wrap;">
+      {% if ticket_txt %}
+      <a href="{{ url_for('descargar_ticket', numero_pedido=numero_pedido) }}"
+         class="btn-primary" style="text-decoration:none;">
+        ⬇ Descargar TXT
+      </a>
+      {% endif %}
+      <button onclick="imprimirTicket()" class="btn-secondary">🖨 Imprimir</button>
+    </div>
+  </div>
+
+  <!-- ── Contenido del archivo TXT ─────────────────────────── -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2>Archivo de texto (.txt)</h2>
+      {% if ticket_txt %}
+      <a href="{{ url_for('descargar_ticket', numero_pedido=numero_pedido) }}"
+         class="btn-action btn-edit" style="text-decoration:none;">⬇ Descargar</a>
+      {% endif %}
+    </div>
+    <div class="section-card-body">
+      {% if ticket_txt %}
+      <pre class="ticket-raw">{{ ticket_txt }}</pre>
+      {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">📄</div>
+        <p>Archivo TXT no encontrado</p>
+        <small>El ticket puede haberse generado con una versión anterior del sistema</small>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<style>
+/* Ticket visual */
+.ticket-visual {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px 28px;
+  box-shadow: 0 4px 24px rgba(0,87,125,.12);
+  font-family: 'Courier New', monospace;
+  border: 1px solid #D0E4ED;
+}
+
+.ticket-head { text-align: center; margin-bottom: 16px; }
+.ticket-logo { font-size: 2.5rem; margin-bottom: 8px; }
+.ticket-head h2 { font-size: 1.4rem; font-weight: 800; color: #00577D; letter-spacing: 3px; }
+.ticket-head p  { font-size: .8rem; color: #5A7A8A; margin-top: 2px; }
+
+.ticket-divider {
+  color: #BFD9EA;
+  font-size: .75rem;
+  text-align: center;
+  margin: 12px 0;
+  letter-spacing: 1px;
+}
+
+.ticket-meta { margin: 12px 0; }
+.ticket-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px dashed #EEF4F7;
+  font-size: .88rem;
+}
+.ticket-meta-row:last-child { border-bottom: none; }
+.ticket-meta-row span:first-child { color: #5A7A8A; }
+
+.ticket-items-header {
+  display: flex;
+  gap: 6px;
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .4px;
+  color: #93B0BE;
+}
+
+.ticket-item-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px dashed #F5FAFE;
+  font-size: .88rem;
+}
+.ticket-item-row:last-child { border-bottom: none; }
+.ticket-item-name { flex: 1; font-weight: 500; color: #153B4F; }
+
+.ticket-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+}
+.ticket-total span:first-child {
+  font-size: .85rem;
+  font-weight: 700;
+  color: #5A7A8A;
+  letter-spacing: 1px;
+}
+.ticket-total-amount {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #00577D;
+}
+
+.ticket-footer {
+  text-align: center;
+  margin-top: 14px;
+  color: #5A7A8A;
+  font-size: .85rem;
+}
+
+/* Raw TXT */
+.ticket-raw {
+  background: #F5FAFE;
+  border: 1px solid #D0E4ED;
+  border-radius: 8px;
+  padding: 18px;
+  font-family: 'Courier New', monospace;
+  font-size: .82rem;
+  color: #153B4F;
+  white-space: pre;
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .ticket-visual { padding: 24px 18px; }
+}
+</style>
+
+<script>
+function imprimirTicket() {
+  const contenido = document.querySelector('.ticket-visual').innerHTML;
+  const ventana = window.open('', '_blank', 'width=420,height=600');
+  ventana.document.write(`
+    <html><head><title>Ticket {{ numero_pedido }}</title>
+    <style>
+      body { font-family: 'Courier New', monospace; padding: 20px; max-width: 380px; margin: 0 auto; }
+      * { box-sizing: border-box; }
+    </style></head>
+    <body>${contenido}</body></html>
+  `);
+  ventana.document.close();
+  ventana.focus();
+  setTimeout(() => { ventana.print(); ventana.close(); }, 400);
+}
+</script>
+{% endblock %}

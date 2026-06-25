@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="breadcrumb">
+    <span>Inicio</span>
+  </div>
+  <h1>Dashboard</h1>
+  <p>Resumen general del sistema Happy Burger</p>
+</div>
+
+<!-- ── Tarjetas métricas ─────────────────────── -->
+<div class="metrics-grid">
+
+  <div class="metric-card">
+    <div class="metric-icon azul">👥</div>
+    <div class="metric-info">
+      <h3>{{ total_clientes }}</h3>
+      <p>Clientes registrados</p>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon verde">🍔</div>
+    <div class="metric-info">
+      <h3>{{ total_productos }}</h3>
+      <p>Productos en menú</p>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon amarillo">📋</div>
+    <div class="metric-info">
+      <h3>{{ total_pedidos }}</h3>
+      <p>Pedidos registrados</p>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-icon rosa">💰</div>
+    <div class="metric-info">
+      <h3>${{ "%.0f"|format(total_ventas) }}</h3>
+      <p>Total en ventas</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Accesos rápidos ───────────────────────── -->
+<div class="section-card">
+  <div class="section-card-header">
+    <h2>Accesos rápidos</h2>
+  </div>
+  <div class="section-card-body">
+    <div class="catalog-grid">
+
+      <a href="{{ url_for('catalogos') }}" class="catalog-card clientes">
+        <div class="catalog-icon azul">👤</div>
+        <h3>Clientes</h3>
+        <p>Datos fiscales y contacto de los clientes registrados.</p>
+        <span class="catalog-arrow">Ver catálogo →</span>
+      </a>
+
+      <a href="{{ url_for('catalogos') }}" class="catalog-card productos">
+        <div class="catalog-icon verde">🍔</div>
+        <h3>Productos</h3>
+        <p>Hamburguesas, bebidas y precios del menú actual.</p>
+        <span class="catalog-arrow">Ver catálogo →</span>
+      </a>
+
+      <a href="{{ url_for('consulta_pedido') }}" class="catalog-card pedidos">
+        <div class="catalog-icon amarillo">📋</div>
+        <h3>Pedidos</h3>
+        <p>Registro, consulta y seguimiento de órdenes.</p>
+        <span class="catalog-arrow">Consultar →</span>
+      </a>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Últimos pedidos ───────────────────────── -->
+{% if ultimos_pedidos %}
+<div class="section-card">
+  <div class="section-card-header">
+    <h2>Últimos pedidos</h2>
+  </div>
+  <div class="section-card-body" style="padding: 0;">
+    <table class="order-table" style="width:100%;">
+      <thead>
+        <tr style="background:#EEF4F7;">
+          <td style="padding:12px 20px; font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#5A7A8A;">Número</td>
+          <td style="padding:12px 20px; font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#5A7A8A;">Cliente</td>
+          <td style="padding:12px 20px; font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#5A7A8A;">Producto</td>
+          <td style="padding:12px 20px; font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#5A7A8A;">Total</td>
+          <td style="padding:12px 20px; font-size:.8rem; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#5A7A8A;">Fecha</td>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in ultimos_pedidos %}
+        <tr>
+          <td style="padding:13px 20px; font-size:.9rem; font-weight:600; color:#0B6F96;">{{ p['numero_pedido'] }}</td>
+          <td style="padding:13px 20px; font-size:.9rem;">{{ p['cliente'] }}</td>
+          <td style="padding:13px 20px; font-size:.9rem;">{{ p['producto'] }}</td>
+          <td style="padding:13px 20px; font-size:.9rem; font-weight:700;">${{ "%.2f"|format(p['subtotal']) }}</td>
+          <td style="padding:13px 20px; font-size:.85rem; color:#5A7A8A;">{{ p['fecha'] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

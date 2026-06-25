@@ -1,0 +1,253 @@
+{% extends "layout.html" %}
+{% block title %}Pedidos{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="{{ url_for('dashboard') }}">Inicio</a><span>›</span><span>Pedidos</span>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>Pedidos</h1>
+      <p>Registro, seguimiento y consulta de órdenes</p>
+    </div>
+    <a href="{{ url_for('pedido_nuevo') }}" class="btn-primary" style="text-decoration:none;">+ Nuevo pedido</a>
+  </div>
+</div>
+
+<!-- Contadores -->
+<div class="metrics-grid" style="grid-template-columns:repeat(2,1fr);margin-bottom:24px;">
+  <div class="metric-card">
+    <div class="metric-icon amarillo">⏳</div>
+    <div class="metric-info"><h3>{{ total_pendientes }}</h3><p>Pendientes</p></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-icon verde">✅</div>
+    <div class="metric-info"><h3>{{ total_completados }}</h3><p>Completados</p></div>
+  </div>
+</div>
+
+<!-- Filtro por fecha -->
+<div class="section-card" style="margin-bottom:24px;">
+  <div class="section-card-header"><h2>Filtrar por fecha</h2></div>
+  <div class="section-card-body" style="padding:16px 24px;">
+    <form method="GET" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+      <div>
+        <label class="form-label" style="display:block;margin-bottom:6px;">Fecha</label>
+        <input class="form-input" type="date" name="fecha" value="{{ filtro_fecha }}" style="width:auto;" />
+      </div>
+      <button type="submit" class="btn-primary">Filtrar</button>
+      {% if filtro_fecha %}
+      <a href="{{ url_for('consulta_pedido') }}" class="btn-secondary">Quitar filtro</a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<!-- Productos del día -->
+{% if productos_del_dia %}
+<div class="section-card" style="margin-bottom:24px; border-left:4px solid #1AB39A;">
+  <div class="section-card-header">
+    <h2>Productos vendidos el {{ dia_consulta }}</h2>
+    <span style="font-size:.8rem;color:#5A7A8A;">{{ productos_del_dia|length }} tipo(s)</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="data-table">
+      <thead><tr>
+        <th>Producto</th>
+        <th style="text-align:center;">Unidades</th>
+        <th style="text-align:right;">Total del día</th>
+      </tr></thead>
+      <tbody>
+        {% for pd in productos_del_dia %}
+        <tr>
+          <td class="cell-primary">{{ pd['producto'] }}</td>
+          <td style="text-align:center;"><span class="badge badge-verde">{{ pd['unidades'] }} uds.</span></td>
+          <td style="text-align:right;font-weight:700;color:#00577D;">${{ "%.2f"|format(pd['total']) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
+<!-- Búsqueda -->
+<div class="section-card" style="margin-bottom:24px;">
+  <div class="section-card-header"><h2>Buscar pedido por número</h2></div>
+  <div class="section-card-body">
+    <form method="POST">
+      <div class="search-bar">
+        <input type="text" name="numero_pedido" placeholder="Ej: PED-0001"
+               value="{{ numero }}" autocomplete="off" />
+        <button type="submit" class="btn-primary">Buscar</button>
+      </div>
+    </form>
+
+    {% if buscado %}
+      {% if pedido_detalle %}
+        {% set h = pedido_detalle.header %}
+        <div class="order-result">
+          <div class="order-result-header">
+            <h3>Detalle del pedido</h3>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span class="status-badge status-{{ h['estado'] }}">{{ h['estado']|capitalize }}</span>
+              <span class="order-badge">{{ h['numero_pedido'] }}</span>
+            </div>
+          </div>
+          <table class="order-table">
+            <tr><td>Número</td><td>{{ h['numero_pedido'] }}</td></tr>
+            <tr><td>Fecha</td><td>{{ h['fecha'] }}</td></tr>
+            <tr><td>Cliente</td><td>{{ h['cliente'] }}</td></tr>
+            <tr>
+              <td style="vertical-align:top;">Productos</td>
+              <td>
+                {% for d in pedido_detalle.detalles %}
+                <div style="display:flex;justify-content:space-between;padding:3px 0;">
+                  <span>{{ d['producto'] }} <span style="color:#5A7A8A;">x{{ d['cantidad'] }}</span></span>
+                  <span style="font-weight:600;">${{ "%.2f"|format(d['subtotal']) }}</span>
+                </div>
+                {% endfor %}
+              </td>
+            </tr>
+            <tr class="total-row"><td>Total</td><td>${{ "%.2f"|format(h['subtotal']) }}</td></tr>
+          </table>
+          <div style="padding:14px 20px;background:#F8FAFE;border-top:1px solid #EEF4F7;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+            {% if h['estado'] == 'pendiente' %}
+            <form method="POST" action="{{ url_for('pedido_completar', numero_pedido=h['numero_pedido']) }}">
+              <button type="submit" class="btn-action btn-complete">✓ Marcar completado</button>
+            </form>
+            {% else %}
+            <form method="POST" action="{{ url_for('pedido_reabrir', numero_pedido=h['numero_pedido']) }}">
+              <button type="submit" class="btn-action btn-edit">↺ Reabrir</button>
+            </form>
+            {% endif %}
+            <a href="{{ url_for('ver_ticket', numero_pedido=h['numero_pedido']) }}"
+               class="btn-action btn-edit" style="background:#E4F3FA;border-color:#BFD9EA;">
+              🖨 Ver / Descargar ticket
+            </a>
+            <form method="POST" action="{{ url_for('pedido_cancelar', numero_pedido=h['numero_pedido']) }}"
+                  onsubmit="return confirm('¿Cancelar este pedido?')">
+              <button type="submit" class="btn-action btn-delete">Cancelar pedido</button>
+            </form>
+          </div>
+        </div>
+      {% else %}
+        <div class="not-found-box">
+          <div class="nf-icon">🔍</div>
+          <p>Pedido no encontrado</p>
+          <small>No existe ningún pedido con el número "{{ numero }}"</small>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+</div>
+
+<!-- ══ SECCIÓN PENDIENTES ══════════════════════════════════════════════ -->
+<div class="section-card" style="margin-bottom:24px; border-top:4px solid #F4A127;">
+  <div class="section-card-header">
+    <h2 style="display:flex;align-items:center;gap:10px;">
+      <span style="color:#F4A127;">⏳</span> Pedidos Pendientes
+      {% if filtro_fecha %}<span style="font-size:.8rem;color:#5A7A8A;">— {{ filtro_fecha }}</span>{% endif %}
+    </h2>
+    <span style="font-size:.8rem;color:#5A7A8A;">{{ pedidos_pendientes|length }} pedido(s)</span>
+  </div>
+
+  {% if pedidos_pendientes %}
+  <div style="overflow-x:auto;">
+    <table class="data-table">
+      <thead><tr>
+        <th>Número</th><th>Fecha</th><th>Cliente</th><th>Productos</th>
+        <th style="text-align:right;">Total</th><th>Acciones</th>
+      </tr></thead>
+      <tbody>
+        {% for p in pedidos_pendientes %}
+        <tr>
+          <td><span class="badge badge-amarillo">{{ p['numero_pedido'] }}</span></td>
+          <td class="cell-secondary" style="font-size:.82rem;">{{ p['fecha'] }}</td>
+          <td class="cell-primary">{{ p['cliente'] }}</td>
+          <td class="cell-secondary" style="font-size:.83rem;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            {{ p['productos_resumen'] }}
+          </td>
+          <td style="text-align:right;font-weight:700;color:#00577D;">${{ "%.2f"|format(p['subtotal']) }}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <form method="POST" action="{{ url_for('pedido_completar', numero_pedido=p['numero_pedido']) }}">
+                <button type="submit" class="btn-action btn-complete" title="Completar">✓</button>
+              </form>
+              <a href="{{ url_for('ver_ticket', numero_pedido=p['numero_pedido']) }}"
+                 class="btn-action btn-edit" title="Descargar ticket">🖨</a>
+              <form method="POST" action="{{ url_for('pedido_cancelar', numero_pedido=p['numero_pedido']) }}"
+                    onsubmit="return confirm('¿Cancelar {{ p['numero_pedido'] }}?')">
+                <button type="submit" class="btn-action btn-delete" title="Cancelar">✕</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:32px;">
+    <div class="empty-icon">⏳</div>
+    <p>No hay pedidos pendientes</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ══ SECCIÓN COMPLETADOS ═════════════════════════════════════════════ -->
+<div class="section-card" style="border-top:4px solid #1AB39A;">
+  <div class="section-card-header">
+    <h2 style="display:flex;align-items:center;gap:10px;">
+      <span style="color:#1AB39A;">✅</span> Pedidos Completados
+      {% if filtro_fecha %}<span style="font-size:.8rem;color:#5A7A8A;">— {{ filtro_fecha }}</span>{% endif %}
+    </h2>
+    <span style="font-size:.8rem;color:#5A7A8A;">{{ pedidos_completados|length }} pedido(s)</span>
+  </div>
+
+  {% if pedidos_completados %}
+  <div style="overflow-x:auto;">
+    <table class="data-table">
+      <thead><tr>
+        <th>Número</th><th>Fecha</th><th>Cliente</th><th>Productos</th>
+        <th style="text-align:right;">Total</th><th>Acción</th>
+      </tr></thead>
+      <tbody>
+        {% for p in pedidos_completados %}
+        <tr style="opacity:.85;">
+          <td><span class="badge badge-verde">{{ p['numero_pedido'] }}</span></td>
+          <td class="cell-secondary" style="font-size:.82rem;">{{ p['fecha'] }}</td>
+          <td class="cell-primary">{{ p['cliente'] }}</td>
+          <td class="cell-secondary" style="font-size:.83rem;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+            {{ p['productos_resumen'] }}
+          </td>
+          <td style="text-align:right;font-weight:700;color:#1AB39A;">${{ "%.2f"|format(p['subtotal']) }}</td>
+          <td>
+            <div style="display:flex;gap:6px;">
+              <form method="POST" action="{{ url_for('pedido_reabrir', numero_pedido=p['numero_pedido']) }}">
+                <button type="submit" class="btn-action btn-edit" title="Reabrir">↺</button>
+              </form>
+              <a href="{{ url_for('ver_ticket', numero_pedido=p['numero_pedido']) }}"
+                 class="btn-action btn-edit" title="Descargar ticket">🖨</a>
+              <form method="POST" action="{{ url_for('pedido_cancelar', numero_pedido=p['numero_pedido']) }}"
+                    onsubmit="return confirm('¿Cancelar {{ p['numero_pedido'] }}?')">
+                <button type="submit" class="btn-action btn-delete" title="Cancelar">✕</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:32px;">
+    <div class="empty-icon">✅</div>
+    <p>No hay pedidos completados</p>
+    <small>Marca pedidos como completados con el botón ✓</small>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+happy_burger.db
+tickets/
+*.DS_Store

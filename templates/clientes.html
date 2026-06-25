@@ -1,0 +1,97 @@
+{% extends "layout.html" %}
+{% block title %}Clientes{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="{{ url_for('dashboard') }}">Inicio</a><span>›</span><span>Clientes</span>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>Clientes</h1>
+      <p>Directorio de clientes registrados en el sistema</p>
+    </div>
+    <a href="{{ url_for('cliente_nuevo') }}" class="btn-primary" style="text-decoration:none;">+ Nuevo cliente</a>
+  </div>
+</div>
+
+<div class="section-card">
+  <div class="section-card-header">
+    <h2>Directorio de clientes</h2>
+    <span style="font-size:.8rem;color:#5A7A8A;" id="contadorClientes">{{ clientes|length }} registro(s)</span>
+  </div>
+
+  <!-- Buscador -->
+  <div style="padding:16px 24px;border-bottom:1px solid #EEF4F7;">
+    <div style="position:relative;max-width:420px;">
+      <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#93B0BE;font-size:1rem;">🔍</span>
+      <input id="buscadorClientes" type="text" class="form-input"
+             style="padding-left:42px;"
+             placeholder="Buscar por nombre, clave, correo o teléfono..."
+             oninput="filtrarClientes()" />
+    </div>
+  </div>
+
+  {% if clientes %}
+  <div style="overflow-x:auto;">
+    <table class="data-table" id="tablaClientes">
+      <thead>
+        <tr>
+          <th>Clave</th><th>Nombre</th><th>Dirección</th>
+          <th>Correo electrónico</th><th>Teléfono</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in clientes %}
+        <tr class="fila-cliente">
+          <td><span class="badge badge-azul">{{ c['clave'] }}</span></td>
+          <td class="cell-primary">{{ c['nombre'] }}</td>
+          <td class="cell-secondary">{{ c['direccion'] or '—' }}</td>
+          <td class="cell-secondary">{{ c['correo_electronico'] or '—' }}</td>
+          <td class="cell-secondary">{{ c['telefono'] or '—' }}</td>
+          <td>
+            <div style="display:flex;gap:8px;">
+              <a href="{{ url_for('cliente_editar', id_cliente=c['id_cliente']) }}"
+                 class="btn-action btn-edit">Editar</a>
+              <form method="POST" action="{{ url_for('cliente_eliminar', id_cliente=c['id_cliente']) }}"
+                    onsubmit="return confirm('¿Eliminar al cliente {{ c['nombre'] }}?')">
+                <button type="submit" class="btn-action btn-delete">Eliminar</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div id="sinResultados" style="display:none;" class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <p>Sin resultados</p>
+      <small>Ningún cliente coincide con tu búsqueda</small>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">👤</div>
+    <p>No hay clientes registrados</p>
+    <small>Haz clic en "Nuevo cliente" para agregar el primero</small>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+function filtrarClientes() {
+  const texto = document.getElementById('buscadorClientes').value.toLowerCase();
+  const filas = document.querySelectorAll('.fila-cliente');
+  let visibles = 0;
+  filas.forEach(fila => {
+    const contenido = fila.textContent.toLowerCase();
+    const mostrar = contenido.includes(texto);
+    fila.style.display = mostrar ? '' : 'none';
+    if (mostrar) visibles++;
+  });
+  document.getElementById('contadorClientes').textContent = visibles + ' registro(s)';
+  document.getElementById('sinResultados').style.display = visibles === 0 ? 'block' : 'none';
+  document.getElementById('tablaClientes').style.display = visibles === 0 ? 'none' : '';
+}
+</script>
+{% endblock %}

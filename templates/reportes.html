@@ -1,0 +1,317 @@
+{% extends "layout.html" %}
+{% block title %}Reportes{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="{{ url_for('dashboard') }}">Inicio</a><span>›</span><span>Reportes</span>
+  </div>
+  <h1>Reportes</h1>
+  <p>Estadísticas, gráficas de ventas y comparativa por día</p>
+</div>
+
+<!-- Métricas -->
+<div class="metrics-grid" style="margin-bottom:28px;">
+  <div class="metric-card">
+    <div class="metric-icon amarillo">💰</div>
+    <div class="metric-info"><h3>${{ "%.2f"|format(total_ventas) }}</h3><p>Total en ventas</p></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-icon azul">📋</div>
+    <div class="metric-info"><h3>{{ total_pedidos }}</h3><p>Pedidos realizados</p></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-icon verde">🎯</div>
+    <div class="metric-info"><h3>${{ "%.2f"|format(ticket_promedio) }}</h3><p>Ticket promedio</p></div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-icon rosa">👥</div>
+    <div class="metric-info"><h3>{{ total_clientes }}</h3><p>Clientes activos</p></div>
+  </div>
+</div>
+
+<!-- Gráficas -->
+<div class="two-col-grid" style="margin-bottom:24px;">
+
+  <!-- Gráfica: Unidades vendidas por producto -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2>Unidades vendidas por producto</h2>
+    </div>
+    <div class="section-card-body">
+      {% if top_productos %}
+      <div class="chart-container">
+        <canvas id="chartProductos"></canvas>
+      </div>
+      {% else %}
+      <div class="empty-state"><div class="empty-icon">📊</div><p>Sin datos aún</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Gráfica: Ingresos por producto -->
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2>Ingresos por producto ($)</h2>
+    </div>
+    <div class="section-card-body">
+      {% if top_productos %}
+      <div class="chart-container">
+        <canvas id="chartIngresos"></canvas>
+      </div>
+      {% else %}
+      <div class="empty-state"><div class="empty-icon">💰</div><p>Sin datos aún</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<!-- Gráfica: Comparativa de ventas por día -->
+<div class="section-card" style="margin-bottom:24px;">
+  <div class="section-card-header">
+    <h2>Comparativa de ventas por día (últimos 7 días)</h2>
+  </div>
+  <div class="section-card-body">
+    {% if chart_dias_labels != '[]' %}
+    <div class="chart-container" style="max-height:280px;">
+      <canvas id="chartDias"></canvas>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📅</div>
+      <p>Sin datos de ventas por día</p>
+      <small>Crea pedidos para ver la comparativa</small>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Rankings -->
+<div class="two-col-grid" style="margin-bottom:24px;">
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2>Top productos más vendidos</h2>
+      <span style="font-size:.8rem;color:#5A7A8A;">Por unidades</span>
+    </div>
+    <div style="padding:0;">
+      {% if top_productos %}
+        {% for tp in top_productos %}
+        <div class="rank-row">
+          <div class="rank-pos">{{ loop.index }}</div>
+          <div class="rank-icon" style="background:var(--pastel-verde);">🍔</div>
+          <div class="rank-info">
+            <span class="rank-name">{{ tp['producto'] }}</span>
+            <div class="rank-bar-wrap">
+              <div class="rank-bar"
+                   style="width:{{ [(tp['total_unidades'] / top_productos[0]['total_unidades'] * 100)|int, 100]|min }}%;">
+              </div>
+            </div>
+          </div>
+          <div class="rank-value">
+            <span class="rank-units">{{ tp['total_unidades'] }} uds.</span>
+            <span class="rank-income">${{ "%.2f"|format(tp['total_ingreso']) }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" style="padding:30px;">
+          <div class="empty-icon">📊</div><p>Sin ventas aún</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-card-header">
+      <h2>Clientes frecuentes</h2>
+      <span style="font-size:.8rem;color:#5A7A8A;">Por pedidos</span>
+    </div>
+    <div style="padding:0;">
+      {% if top_clientes %}
+        {% for tc in top_clientes %}
+        <div class="rank-row">
+          <div class="rank-pos">{{ loop.index }}</div>
+          <div class="rank-icon" style="background:var(--pastel-azul);">👤</div>
+          <div class="rank-info">
+            <span class="rank-name">{{ tc['cliente'] }}</span>
+            <div class="rank-bar-wrap">
+              <div class="rank-bar" style="background:#0B6F96;
+                   width:{{ [(tc['total_pedidos'] / top_clientes[0]['total_pedidos'] * 100)|int, 100]|min }}%;">
+              </div>
+            </div>
+          </div>
+          <div class="rank-value">
+            <span class="rank-units">{{ tc['total_pedidos'] }} pedido(s)</span>
+            <span class="rank-income">${{ "%.2f"|format(tc['total_gastado']) }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state" style="padding:30px;">
+          <div class="empty-icon">👥</div><p>Sin datos aún</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+<!-- Historial completo -->
+<div class="section-card">
+  <div class="section-card-header">
+    <h2>Historial completo de pedidos</h2>
+    <span style="font-size:.8rem;color:#5A7A8A;">{{ todos_pedidos|length }} pedido(s)</span>
+  </div>
+  {% if todos_pedidos %}
+  <div style="overflow-x:auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Número</th><th>Fecha</th><th>Cliente</th><th>Producto</th>
+          <th style="text-align:center;">Cant.</th>
+          <th style="text-align:right;">Precio</th>
+          <th style="text-align:right;">Total</th>
+          <th style="text-align:center;">Estado</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in todos_pedidos %}
+        <tr>
+          <td><span class="badge badge-azul">{{ p['numero_pedido'] }}</span></td>
+          <td class="cell-secondary" style="font-size:.82rem;">{{ p['fecha'] }}</td>
+          <td class="cell-primary">{{ p['cliente'] }}</td>
+          <td class="cell-secondary">{{ p['producto'] }}</td>
+          <td style="text-align:center;">{{ p['cantidad'] }}</td>
+          <td style="text-align:right;color:#5A7A8A;">${{ "%.2f"|format(p['precio']) }}</td>
+          <td style="text-align:right;font-weight:700;color:#00577D;">${{ "%.2f"|format(p['subtotal']) }}</td>
+          <td style="text-align:center;">
+            <span class="status-badge status-{{ p['estado'] }}">{{ p['estado']|capitalize }}</span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr style="background:#EEF4F7;">
+          <td colspan="6" style="padding:13px 20px;font-weight:700;font-size:.85rem;">TOTAL GENERAL</td>
+          <td style="padding:13px 20px;text-align:right;font-weight:700;font-size:1rem;color:#00577D;">
+            ${{ "%.2f"|format(total_ventas) }}
+          </td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📋</div><p>No hay pedidos aún</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const prodLabels  = {{ chart_prod_labels|safe }};
+const prodUnits   = {{ chart_prod_units|safe }};
+const prodRevenue = {{ chart_prod_revenue|safe }};
+const diasLabels  = {{ chart_dias_labels|safe }};
+const diasVentas  = {{ chart_dias_ventas|safe }};
+const diasPedidos = {{ chart_dias_pedidos|safe }};
+
+const colores = ['#0B6F96','#1AB39A','#F4A127','#E63946','#7B61FF','#2ECC71'];
+
+if (prodLabels.length > 0) {
+  new Chart(document.getElementById('chartProductos'), {
+    type: 'bar',
+    data: {
+      labels: prodLabels,
+      datasets: [{
+        label: 'Unidades vendidas',
+        data: prodUnits,
+        backgroundColor: colores,
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#EEF4F7' }, ticks: { precision: 0 } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('chartIngresos'), {
+    type: 'bar',
+    data: {
+      labels: prodLabels,
+      datasets: [{
+        label: 'Ingresos ($)',
+        data: prodRevenue,
+        backgroundColor: colores.map(c => c + 'CC'),
+        borderColor: colores,
+        borderWidth: 2,
+        borderRadius: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#EEF4F7' },
+             ticks: { callback: v => '$' + v.toFixed(0) } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+if (diasLabels.length > 0) {
+  new Chart(document.getElementById('chartDias'), {
+    type: 'line',
+    data: {
+      labels: diasLabels,
+      datasets: [
+        {
+          label: 'Ventas ($)',
+          data: diasVentas,
+          borderColor: '#0B6F96',
+          backgroundColor: 'rgba(11,111,150,.1)',
+          fill: true,
+          tension: .4,
+          pointBackgroundColor: '#0B6F96',
+          pointRadius: 5,
+          yAxisID: 'y',
+        },
+        {
+          label: 'Pedidos',
+          data: diasPedidos,
+          borderColor: '#1AB39A',
+          backgroundColor: 'rgba(26,179,154,.08)',
+          fill: false,
+          tension: .4,
+          pointBackgroundColor: '#1AB39A',
+          pointRadius: 5,
+          borderDash: [5, 4],
+          yAxisID: 'y2',
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        y:  { beginAtZero: true, grid: { color: '#EEF4F7' },
+              ticks: { callback: v => '$' + v } },
+        y2: { beginAtZero: true, position: 'right', grid: { display: false },
+              ticks: { precision: 0, callback: v => v + ' ped.' } }
+      }
+    }
+  });
+}
+</script>
+{% endblock %}

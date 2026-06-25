@@ -1,0 +1,134 @@
+{% extends "layout.html" %}
+{% block title %}Menú{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="{{ url_for('dashboard') }}">Inicio</a><span>›</span><span>Menú</span>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>Menú de Productos</h1>
+      <p>Catálogo de hamburguesas, bebidas y precios disponibles</p>
+    </div>
+    <a href="{{ url_for('producto_nuevo') }}" class="btn-primary" style="text-decoration:none;">+ Nuevo producto</a>
+  </div>
+</div>
+
+{% if productos %}
+<!-- Buscador + tarjetas -->
+<div class="section-card" style="margin-bottom:24px;">
+  <div class="section-card-header">
+    <h2>Buscador de productos</h2>
+    <span style="font-size:.8rem;color:#5A7A8A;" id="contadorProductos">{{ productos|length }} producto(s)</span>
+  </div>
+  <div style="padding:16px 24px;border-bottom:1px solid #EEF4F7;">
+    <div style="position:relative;max-width:420px;">
+      <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#93B0BE;">🔍</span>
+      <input id="buscadorProductos" type="text" class="form-input"
+             style="padding-left:42px;"
+             placeholder="Buscar por nombre o clave..."
+             oninput="filtrarProductos()" />
+    </div>
+  </div>
+  <div class="section-card-body">
+    <div class="menu-grid" id="gridProductos">
+      {% for p in productos %}
+      <div class="menu-card tarjeta-producto" data-nombre="{{ p['nombre']|lower }}" data-clave="{{ p['clave']|lower }}">
+        <div class="menu-card-icon">🍔</div>
+        <div class="menu-card-body">
+          <span class="badge badge-verde">{{ p['clave'] }}</span>
+          <h3>{{ p['nombre'] }}</h3>
+        </div>
+        <div class="menu-card-price">${{ "%.2f"|format(p['precio']) }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div id="sinResultadosCards" style="display:none;" class="empty-state">
+      <div class="empty-icon">🔍</div><p>Sin resultados</p>
+      <small>Ningún producto coincide con tu búsqueda</small>
+    </div>
+  </div>
+</div>
+
+<!-- Tabla completa -->
+<div class="section-card">
+  <div class="section-card-header">
+    <h2>Lista completa</h2>
+    <span style="font-size:.8rem;color:#5A7A8A;" id="contadorTabla">{{ productos|length }} producto(s)</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="data-table" id="tablaProductos">
+      <thead>
+        <tr>
+          <th>#</th><th>Clave</th><th>Nombre</th>
+          <th style="text-align:right;">Precio</th><th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in productos %}
+        <tr class="fila-producto" data-nombre="{{ p['nombre']|lower }}" data-clave="{{ p['clave']|lower }}">
+          <td class="cell-secondary">{{ loop.index }}</td>
+          <td><span class="badge badge-verde">{{ p['clave'] }}</span></td>
+          <td class="cell-primary">{{ p['nombre'] }}</td>
+          <td style="text-align:right;font-weight:700;color:#00577D;">${{ "%.2f"|format(p['precio']) }}</td>
+          <td>
+            <div style="display:flex;gap:8px;">
+              <a href="{{ url_for('producto_editar', id_producto=p['id_producto']) }}"
+                 class="btn-action btn-edit">Editar</a>
+              <form method="POST" action="{{ url_for('producto_eliminar', id_producto=p['id_producto']) }}"
+                    onsubmit="return confirm('¿Eliminar {{ p['nombre'] }}?')">
+                <button type="submit" class="btn-action btn-delete">Eliminar</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div id="sinResultadosTabla" style="display:none;" class="empty-state">
+      <div class="empty-icon">🔍</div><p>Sin resultados en la tabla</p>
+    </div>
+  </div>
+</div>
+
+{% else %}
+<div class="section-card">
+  <div class="empty-state">
+    <div class="empty-icon">🍔</div>
+    <p>No hay productos registrados</p>
+    <small>Haz clic en "Nuevo producto" para agregar el primero</small>
+  </div>
+</div>
+{% endif %}
+
+<script>
+function filtrarProductos() {
+  const texto = document.getElementById('buscadorProductos').value.toLowerCase();
+
+  // Tarjetas
+  const tarjetas = document.querySelectorAll('.tarjeta-producto');
+  let visiblesCards = 0;
+  tarjetas.forEach(t => {
+    const ok = t.dataset.nombre.includes(texto) || t.dataset.clave.includes(texto);
+    t.style.display = ok ? '' : 'none';
+    if (ok) visiblesCards++;
+  });
+  document.getElementById('contadorProductos').textContent = visiblesCards + ' producto(s)';
+  document.getElementById('sinResultadosCards').style.display = visiblesCards === 0 ? 'block' : 'none';
+  document.getElementById('gridProductos').style.display = visiblesCards === 0 ? 'none' : '';
+
+  // Tabla
+  const filas = document.querySelectorAll('.fila-producto');
+  let visiblesTabla = 0;
+  filas.forEach(f => {
+    const ok = f.dataset.nombre.includes(texto) || f.dataset.clave.includes(texto);
+    f.style.display = ok ? '' : 'none';
+    if (ok) visiblesTabla++;
+  });
+  document.getElementById('contadorTabla').textContent = visiblesTabla + ' producto(s)';
+  document.getElementById('sinResultadosTabla').style.display = visiblesTabla === 0 ? 'block' : 'none';
+  document.getElementById('tablaProductos').style.display = visiblesTabla === 0 ? 'none' : '';
+}
+</script>
+{% endblock %}

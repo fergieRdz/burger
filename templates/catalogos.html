@@ -1,0 +1,99 @@
+{% extends "layout.html" %}
+{% block title %}Catálogos{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <div class="breadcrumb">
+    <a href="{{ url_for('dashboard') }}">Inicio</a>
+    <span>›</span>
+    <span>Catálogos</span>
+  </div>
+  <h1>Catálogos</h1>
+  <p>Administra clientes, productos y pedidos del sistema</p>
+</div>
+
+<!-- ── Tarjetas de catálogo ──────────────────── -->
+<div class="catalog-grid">
+
+  <!-- Clientes -->
+  <div class="catalog-card clientes" style="cursor:default;">
+    <div class="catalog-icon azul">👤</div>
+    <h3>Clientes</h3>
+    <p>Datos fiscales y contacto de los clientes. Gestiona el alta, modificación y baja de registros.</p>
+
+    <div style="margin-top: 8px; width:100%;">
+      <table class="order-table" style="width:100%; margin-top:10px;">
+        {% if clientes %}
+          <tr style="background:#EEF4F7;">
+            <td style="padding:8px 10px; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:#5A7A8A;">Clave</td>
+            <td style="padding:8px 10px; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:#5A7A8A;">Nombre</td>
+            <td style="padding:8px 10px; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:#5A7A8A;">Teléfono</td>
+          </tr>
+          {% for c in clientes %}
+          <tr>
+            <td style="padding:9px 10px; font-size:.85rem; color:#0B6F96; font-weight:600;">{{ c['clave'] }}</td>
+            <td style="padding:9px 10px; font-size:.85rem;">{{ c['nombre'] }}</td>
+            <td style="padding:9px 10px; font-size:.85rem; color:#5A7A8A;">{{ c['telefono'] }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="3" style="padding:14px 10px; color:#93B0BE; font-size:.85rem; text-align:center;">Sin registros — agrega clientes desde el menú CLI</td></tr>
+        {% endif %}
+      </table>
+    </div>
+
+    <span class="catalog-arrow" style="margin-top:14px;">{{ clientes|length }} cliente(s) registrado(s)</span>
+  </div>
+
+  <!-- Productos -->
+  <div class="catalog-card productos" style="cursor:default;">
+    <div class="catalog-icon verde">🍔</div>
+    <h3>Productos</h3>
+    <p>Hamburguesas, bebidas y precios del menú actual. Mantén actualizado el catálogo de artículos.</p>
+
+    <div style="margin-top: 8px; width:100%;">
+      <table class="order-table" style="width:100%; margin-top:10px;">
+        {% if productos %}
+          <tr style="background:#EEF4F7;">
+            <td style="padding:8px 10px; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:#5A7A8A;">Clave</td>
+            <td style="padding:8px 10px; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:#5A7A8A;">Nombre</td>
+            <td style="padding:8px 10px; font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:#5A7A8A;">Precio</td>
+          </tr>
+          {% for p in productos %}
+          <tr>
+            <td style="padding:9px 10px; font-size:.85rem; color:#1AB39A; font-weight:600;">{{ p['clave'] }}</td>
+            <td style="padding:9px 10px; font-size:.85rem;">{{ p['nombre'] }}</td>
+            <td style="padding:9px 10px; font-size:.85rem; font-weight:700;">${{ "%.2f"|format(p['precio']) }}</td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr><td colspan="3" style="padding:14px 10px; color:#93B0BE; font-size:.85rem; text-align:center;">Sin registros — agrega productos desde el menú CLI</td></tr>
+        {% endif %}
+      </table>
+    </div>
+
+    <span class="catalog-arrow" style="margin-top:14px;">{{ productos|length }} producto(s) en menú</span>
+  </div>
+
+  <!-- Pedidos -->
+  <div class="catalog-card pedidos" style="cursor:default;">
+    <div class="catalog-icon amarillo">📋</div>
+    <h3>Pedidos</h3>
+    <p>Registro y consulta de órdenes realizadas. Busca cualquier pedido por su número único.</p>
+
+    <a href="{{ url_for('consulta_pedido') }}"
+       style="display:inline-block; margin-top:14px; padding:10px 20px;
+              background:#00577D; color:#fff; border-radius:8px; font-size:.875rem;
+              font-weight:600; text-decoration:none; transition:background .2s;"
+       onmouseover="this.style.background='#005570'"
+       onmouseout="this.style.background='#00577D'">
+      Consultar pedido →
+    </a>
+
+    <span class="catalog-arrow" style="margin-top:12px;">{{ total_pedidos }} pedido(s) registrado(s)</span>
+  </div>
+
+</div>
+
+{% endblock %}

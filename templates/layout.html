@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}Happy Burger{% endblock %} — Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+
+  <header class="topbar">
+    <a href="{{ url_for('dashboard') }}" class="topbar-brand">
+      <span class="brand-icon">🍔</span>
+      <span>Happy <em>Burger</em></span>
+    </a>
+    <div class="topbar-right">
+      <span class="topbar-greeting">Buen día, Administrador</span>
+      <div class="topbar-avatar">A</div>
+    </div>
+  </header>
+
+  <nav class="navbar">
+    <a href="{{ url_for('dashboard') }}"      class="{{ 'active' if active == 'dashboard' }}">Dashboard</a>
+    <a href="{{ url_for('catalogos') }}"       class="{{ 'active' if active == 'catalogos' }}">Catálogos</a>
+    <a href="{{ url_for('consulta_pedido') }}" class="{{ 'active' if active == 'pedidos' }}">Pedidos</a>
+    <a href="{{ url_for('clientes') }}"        class="{{ 'active' if active == 'clientes' }}">Clientes</a>
+    <a href="{{ url_for('menu_productos') }}"  class="{{ 'active' if active == 'menu' }}">Menú</a>
+    <a href="{{ url_for('reportes') }}"        class="{{ 'active' if active == 'reportes' }}">Reportes</a>
+    <a href="#">Ajustes</a>
+  </nav>
+
+  <!-- Mensajes flash -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container">
+      {% for category, message in messages %}
+      <div class="flash flash-{{ category }}">
+        <span>{{ '✓' if category == 'success' else '✕' }}</span>
+        {{ message }}
+        <button onclick="this.parentElement.remove()">×</button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <main class="content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    &copy; 2026 Happy Burger &mdash; Sistema Administrativo &mdash; Todos los derechos reservados
+  </footer>
+
+</body>
+</html>
