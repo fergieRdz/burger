@@ -3,16 +3,20 @@
 import os
 from datetime import datetime
 
+from base import EntidadBase
 from database import get_connection
 
 TICKETS_DIR = "tickets"
 
 
-class Pedido:
+class Pedido(EntidadBase):
     """Representa un pedido de Happy Burger con uno o varios productos.
 
+    Hereda clave y nombre de EntidadBase, usando numero_pedido como
+    clave identificadora y una descripción generada como nombre.
+
     Attributes:
-        numero_pedido (str): Identificador único del pedido.
+        numero_pedido (str): Identificador único del pedido (mismo que clave).
         id_cliente (int): ID del cliente en la base de datos.
         detalles (list): Lista de dicts con {id_producto, cantidad, precio}.
         subtotal (float): Total calculado sumando todas las líneas.
@@ -22,7 +26,8 @@ class Pedido:
 
     def __init__(self, numero_pedido: str, id_cliente: int,
                  detalles: list, fecha: str = None) -> None:
-        """Inicializa el pedido y calcula el subtotal total."""
+        """Inicializa el pedido, hereda clave/nombre y calcula el subtotal."""
+        super().__init__(numero_pedido, f"Pedido {numero_pedido}")
         self.numero_pedido = numero_pedido
         self.id_cliente = id_cliente
         self.detalles = detalles  # [{id_producto, cantidad, precio}, ...]

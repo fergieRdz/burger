@@ -1,10 +1,14 @@
 """Módulo con la clase Cliente y sus operaciones CRUD sobre SQLite."""
 
+from base import EntidadBase
 from database import get_connection
 
 
-class Cliente:
+class Cliente(EntidadBase):
     """Representa a un cliente registrado en Happy Burger.
+
+    Hereda clave y nombre de EntidadBase y agrega los datos
+    de contacto propios de un cliente.
 
     Attributes:
         clave (str): Identificador único legible del cliente.
@@ -17,8 +21,7 @@ class Cliente:
     def __init__(self, clave: str, nombre: str, direccion: str,
                  correo_electronico: str, telefono: str) -> None:
         """Inicializa una instancia de Cliente con sus datos básicos."""
-        self.clave = clave
-        self.nombre = nombre
+        super().__init__(clave, nombre)
         self.direccion = direccion
         self.correo_electronico = correo_electronico
         self.telefono = telefono

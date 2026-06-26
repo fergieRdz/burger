@@ -1,10 +1,14 @@
 """Módulo con la clase Producto y sus operaciones CRUD sobre SQLite."""
 
+from base import EntidadBase
 from database import get_connection
 
 
-class Producto:
+class Producto(EntidadBase):
     """Representa un producto del menú de Happy Burger.
+
+    Hereda clave y nombre de EntidadBase y agrega el precio
+    unitario propio de un artículo del menú.
 
     Attributes:
         clave (str): Identificador único legible del producto.
@@ -14,8 +18,7 @@ class Producto:
 
     def __init__(self, clave: str, nombre: str, precio: float) -> None:
         """Inicializa una instancia de Producto con sus datos básicos."""
-        self.clave = clave
-        self.nombre = nombre
+        super().__init__(clave, nombre)
         self.precio = precio
 
     def agregar_producto(self) -> None:
